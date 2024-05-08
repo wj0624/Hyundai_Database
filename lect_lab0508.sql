@@ -1,0 +1,286 @@
+SELECT SAL,
+        TO_CHAR(SAL, '999,999.000') AS SAL1,
+        TO_CHAR(SAL, '999.0') AS SAL2,
+        TO_CHAR(SAL, '$999,999.099') AS SAL3,
+        TO_CHAR(SAL, 'L999,999.0') AS SAL4,
+        TO_CHAR(SAL, 'FM999,999') AS SAL5
+FROM EMP;
+        
+
+-- 6-41
+SELECT '1600'-1000,
+        TO_NUMBER('1,600', '9.999') - 1000,
+        TO_NUMBER('11,600', '99.999') - 10000,
+        '1600'-'1000', '1,600'-'1,000'
+FROM DUAL;
+
+/* 입사일이 1981년 6월 1일 이후인 사원을 출력 */
+SELECT *
+FROM EMP
+WHERE HIREDATE > TO_DATE('19810601', 'YYYYMMDD');
+
+SELECT *
+FROM EMP
+WHERE TO_CHAR(HIREDATE, 'YYYYMMDD') >= '19810601';
+
+-- NULL
+-- 6-45
+/* 사원들의 사원명, 월급, 연봉을 출력(월급*12+수당) */
+SELECT ENAME, SAL, SAL*12+COMM, NVL(COMM, 0), SAL*12+NVL(COMM,0)
+FROM EMP;
+
+-- 6-46
+/* 수당 있으면 O 없으면 X 출력 */
+SELECT ENAME, SAL, COMM, NVL2(COMM, 'O', 'X'),
+        SAL*12+NVL2(COMM, COMM, 0), NVL2(COMM, SAL*12+COMM, SAL*12)
+FROM EMP;
+
+/*
+직책에 따라 급여를 다음과 같이 인상
+MANAGER 10%,
+SALESMAN 5%,
+ANALYST 0%,
+그외 3%
+*/
+
+SELECT JOB, SAL, DECODE(JOB, 'MANAGER', SAL*1.1,
+                                            'SALESMAN', SAL*1.05,
+                                            'ANALYST', SAL,
+                                            SAL*1.03) AS NEWSAL
+FROM EMP;
+
+SELECT DEPTNO, DECODE(DEPTNO, 10, 'ACCOUNTING',
+                                                20, 'RESEARCH',
+                                                30, 'SALES',
+                                                40, 'OPERATIONS',
+                                                '해당사항 없음') AS DNAME
+FROM EMP;
+
+-- 6-48
+SELECT JOB, SAL, DECODE(JOB, 'MANAGER', SAL*1.1,
+                                            'SALESMAN', SAL*1.05,
+                                            'ANALYST', SAL,
+                                            SAL*1.03) AS NEWSAL,
+                        CASE JOB
+                        WHEN 'MANAGER' THEN SAL*1.1
+                        WHEN 'SALESMAN' THEN SAL*1.05
+                        WHEN 'ANALYST' THEN SAL
+                        ELSE SAL*1.03
+                        END AS NEWSAL2
+FROM EMP;
+
+-- 6-49
+/* COMM NULL인 경우 해당사항 없음, 0인 경우 수당없음
+    그밖의 경우 수당:값 을 사원번호, 사원명, 수당을 출력
+    열명은 COMM_TXT로 지정 */
+    
+SELECT EMPNO, ENAME, CASE
+                                  WHEN COMM IS NULL THEN '해당사항 없음'
+                                  WHEN COMM = 0 THEN '수당 없음'
+                                  WHEN COMM > 0 THEN '수당:' || COMM
+                                  END AS COMM_TXT
+FROM EMP;
+
+    
+SELECT EMPNO, ENAME, DECODE(COMM, NULL, '해당사항 없음',
+                                            0, '수당 없음',
+                                            '수당:' || COMM) AS COMM_TXT1
+FROM EMP;
+
+/* P.174-175 */
+-- Q1
+SELECT EMPNO, RPAD(SUBSTR(EMPNO, 1, 2), 4, '*') AS MASKING_EMPNO,
+            ENAME, RPAD(SUBSTR(ENAME, 1, 1), LENGTH(ENAME), '*') AS MASKING_ENAME
+FROM EMP
+WHERE LENGTH(ENAME) >= 5 AND LENGTH(ENAME) < 6;
+
+-- Q2
+SELECT EMPNO, ENAME, SAL,
+            TRUNC(SAL/21.5, 2) AS DAY_PAY,
+            ROUND(SAL/21.5/8, 1) AS TIME_PAY
+FROM EMP;
+
+-- Q3
+SELECT EMPNO, ENAME, HIREDATE,
+           TO_CHAR(NEXT_DAY(ADD_MONTHS(HIREDATE, 3) , '월'), 'YYYY-MM-DD') AS R_JOB,
+            DECODE(COMM, NULL, 'N/A', COMM) AS COMM
+FROM EMP;
+
+-- Q4
+SELECT EMPNO, ENAME, MGR,
+           CASE
+            WHEN MGR IS NULL THEN '0000'
+            WHEN SUBSTR(MGR, 1, 2) = '75' THEN '5555'
+            WHEN SUBSTR(MGR, 1, 2) = '76' THEN '6666'
+            WHEN SUBSTR(MGR, 1, 2) = '77' THEN '7777'
+            WHEN SUBSTR(MGR, 1, 2) = '78' THEN '8888'
+            ELSE TO_CHAR(MGR)
+           END AS CHG_MGR
+FROM EMP;
+
+SELECT * FROM EMP;
+-- SUM
+-- 7-4
+SELECT SUM(SAL), SUM(DISTINCT SAL), SUM(ALL SAL)
+FROM EMP;
+
+SELECT SUM(COMM), NULL+300+500
+FROM EMP;
+
+SELECT SUM(COMM), COMM
+FROM EMP
+GROUP BY COMM;
+
+SELECT ENAME, SUM(SAL) OVER (PARTITION BY ENAME)
+FROM EMP;
+
+-- COUNT
+-- 7-7
+SELECT COUNT(*), COUNT(DISTINCT SAL), COUNT(ALL SAL)
+FROM EMP;
+
+/* COUNT NULL 이 아닌 데이터의 갯수 */
+SELECT COUNT(*)
+FROM EMP
+WHERE COMM IS NOT NULL;
+
+SELECT COUNT(COMM)
+FROM EMP;
+
+-- MIN, MAX
+-- 7-10
+SELECT MIN(SAL), MAX(SAL),
+        MIN(COMM), MAX(COMM),
+        MIN(HIREDATE), MAX(HIREDATE),
+        MIN(ENAME), MAX(ENAME)
+FROM EMP;
+
+-- AVG
+-- 7-14
+SELECT AVG(SAL), AVG(DISTINCT SAL), AVG(ALL SAL)
+FROM EMP;
+
+SELECT AVG(COMM), AVG(NVL(COMM,0)),
+            SUM(COMM)/COUNT(*), SUM(COMM)/COUNT(COMM)
+FROM EMP;
+
+-- GROUP BY
+/* 부서별로 평균 월급을 출력 */
+-- 7-17
+SELECT AVG(SAL), DEPTNO
+FROM EMP
+GROUP BY DEPTNO;
+
+SELECT DEPTNO, JOB, AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+ORDER BY DEPTNO, JOB;
+
+-- HAVING
+-- 7-23
+/* 부서별로 월급 평균이 2000 이상인 부서를 출력하세요 */
+SELECT DEPTNO, AVG(SAL) AS AVGSAL
+FROM EMP
+WHERE SAL <= 3000
+GROUP BY DEPTNO
+HAVING AVG(SAL) >= 2000
+ORDER BY DEPTNO, AVGSAL;
+
+/* 부서 내 직급별로 직급의 개수, 최대 월급, 총 월급, 평균월급을 출력 */
+SELECT DEPTNO, JOB, COUNT(JOB), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+ORDER BY DEPTNO, JOB;
+
+/* 월급의 최대, 최소 차이가 3000 이상인 사원을 출력 */
+SELECT DEPTNO, JOB, COUNT(JOB), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+HAVING MAX(SAL) - MIN(SAL) >= 3000
+ORDER BY DEPTNO, JOB;
+
+-- 7-25
+SELECT DEPTNO, JOB, COUNT(JOB), MAX(SAL), SUM(SAL), ROUND(AVG(SAL), 0)
+FROM EMP
+GROUP BY ROLLUP(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB;
+
+-- 7-26
+SELECT DEPTNO, JOB, COUNT(JOB), MAX(SAL), SUM(SAL), ROUND(AVG(SAL), 0)
+FROM EMP
+GROUP BY CUBE(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB;
+
+-- 7-29
+SELECT DEPTNO, JOB, COUNT(*)
+FROM EMP
+GROUP BY GROUPING SETS(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB;
+
+--7-30
+SELECT DEPTNO,  JOB, COUNT(JOB), MAX(SAL), SUM(SAL), ROUND(AVG(SAL), 0),
+        CASE
+        WHEN GROUPING(JOB)=1 AND GROUPING(DEPTNO)=0 THEN '소계'
+        WHEN GROUPING(JOB)=1 AND GROUPING(DEPTNO)=1 THEN '총계'
+        ELSE JOB
+        END AS LABEL       
+FROM EMP
+GROUP BY CUBE(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB;
+
+-- 7-32
+SELECT DEPTNO,  JOB, COUNT(JOB), MAX(SAL), SUM(SAL), ROUND(AVG(SAL), 0),
+        DECODE(GROUPING_ID(DEPTNO, JOB), 1, '소계', 3, '총계', JOB) AS LABEL
+FROM EMP
+GROUP BY CUBE(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB;
+
+-- 7-34
+SELECT DEPTNO, LISTAGG(ENAME, ',') WITHIN GROUP(ORDER BY SAL) AS NAMES
+FROM EMP
+GROUP BY DEPTNO;
+
+-- 7-36
+SELECT DEPTNO, JOB, MAX(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+ORDER BY DEPTNO, JOB;
+
+SELECT * FROM (
+    -- 피벗을 만들기 위한 소스
+    SELECT DEPTNO, JOB, SAL
+    FROM EMP
+)
+PIVOT (MAX(SAL) FOR DEPTNO IN (10, 20, 30))
+ORDER BY JOB;
+
+/*P.212-213 */
+-- Q1
+SELECT DEPTNO, ROUND(AVG(SAL), 0) AS AVG_SAL, MAX(SAL) AS MAX_SAL,
+            MIN(SAL) AS MIN_SAL, COUNT(*) AS CNT
+FROM EMP
+GROUP BY DEPTNO;
+
+-- Q2
+SELECT JOB, COUNT(*)
+FROM EMP
+GROUP BY JOB
+HAVING COUNT(*) >=3;
+
+-- Q3
+SELECT TO_CHAR(HIREDATE, 'YYYY') AS HIRE_YEAR, DEPTNO, COUNT(*) CNT
+FROM EMP
+GROUP BY TO_CHAR(HIREDATE, 'YYYY'), DEPTNO
+ORDER BY HIRE_YEAR, DEPTNO;
+
+-- Q4
+SELECT DECODE(COMM, NULL, 'X', 'O') EXIST_COMM, COUNT(*) CNT
+FROM EMP
+GROUP BY DECODE(COMM, NULL, 'X', 'O');
+
+-- Q5
+SELECT DEPTNO, TO_CHAR(HIREDATE, 'YYYY') AS HIRE_YEAR,  COUNT(*) CNT,
+        MAX(SAL) MAX_SAL, SUM(SAL) SUM_SAL, AVG(SAL) AVG_SAL
+FROM EMP
+GROUP BY ROLLUP(DEPTNO, TO_CHAR(HIREDATE, 'YYYY'))
+ORDER BY DEPTNO, HIRE_YEAR;
