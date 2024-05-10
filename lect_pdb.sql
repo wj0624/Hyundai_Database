@@ -1,0 +1,8 @@
+SELECT * FROM DBA_TABLES;
+-- 테이블명 $로 끝나면 시스템 테이블로 착각할 수 있음, $나 # 안쓰는게 좋음
+
+SELECT *
+FROM DBA_USERS
+WHERE USERNAME = 'SCOTT';
+
+GRANT CREATE VIEW TO SCOTT;
