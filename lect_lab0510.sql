@@ -47,6 +47,7 @@ WHERE EMPNO IN (SELECT E.EMPNO
                             WHERE E.SAL BETWEEN S.LOSAL AND S.HISAL
                             AND S.GRADE = 3
                             AND DEPTNO = 30);
+                            
 
 DELETE FROM EMP_TEMP2;
 
